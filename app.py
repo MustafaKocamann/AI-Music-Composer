@@ -1,4 +1,5 @@
 from datetime import datetime
+from html import escape
 from io import BytesIO
 from math import ceil
 
@@ -155,8 +156,8 @@ def render_history() -> None:
         with st.container():
             st.markdown(
                 f'<div class="history-card"><div class="track-header"><div>'
-                f'<div class="track-title">🎵 {track["title"]}</div>'
-                f'<div class="track-meta">{track["style"]} · {track["mood"]} · '
+                f'<div class="track-title">🎵 {escape(str(track["title"]))}</div>'
+                f'<div class="track-meta">{escape(str(track["style"]))} · {escape(str(track["mood"]))} · '
                 f'{track["tempo"]} BPM · {track["duration"]}</div></div>'
                 f'<div class="status-pill">COMPOSED</div></div></div>',
                 unsafe_allow_html=True,
@@ -223,6 +224,12 @@ if generate:
             for chord in harmony.split():
                 harmony_notes.extend(chord.split("-"))
             all_freqs = melody_freqs + note_to_frequencies(harmony_notes)
+            if not all_freqs:
+                st.error(
+                    "The composition did not contain playable notes. "
+                    "Try a more specific musical description and generate again."
+                )
+                st.stop()
             target_seconds = {
                 "30 seconds": 30,
                 "60 seconds": 60,
@@ -255,11 +262,15 @@ if track:
     st.markdown('<div class="section-label">02 / Your latest composition</div>', unsafe_allow_html=True)
     st.markdown(
         f'<div class="result-card"><div class="track-header"><div><div class="track-title">'
-        f'🎧 {track["title"]}</div><div class="track-meta">{track["style"]} · {track["mood"]} · '
+        f'🎧 {escape(str(track["title"]))}</div><div class="track-meta">'
+        f'{escape(str(track["style"]))} · {escape(str(track["mood"]))} · '
         f'{track["tempo"]} BPM · {track["duration"]}</div></div><div class="status-pill">READY TO PLAY</div></div>',
         unsafe_allow_html=True,
     )
     st.audio(BytesIO(track["audio"]), format="audio/wav")
-    st.markdown(f'<div class="summary">{track["summary"]}</div></div>', unsafe_allow_html=True)
+    st.markdown(
+        f'<div class="summary">{escape(str(track["summary"]))}</div></div>',
+        unsafe_allow_html=True,
+    )
 
 render_history()

@@ -1,0 +1,67 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ai-music-composer
+  labels:
+    app: ai-music-composer
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ai-music-composer
+  template:
+    metadata:
+      labels:
+        app: ai-music-composer
+    spec:
+      containers:
+      - name: ai-music-composer
+        image: ai-music-composer:latest
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 8501
+          name: http
+          protocol: TCP
+        env:
+        - name: GROQ_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: ai-music-composer-secrets
+              key: GROQ_API_KEY
+        readinessProbe:
+          httpGet:
+            path: /_stcore/health
+            port: http
+          initialDelaySeconds: 10
+          periodSeconds: 10
+        livenessProbe:
+          httpGet:
+            path: /_stcore/health
+            port: http
+          initialDelaySeconds: 30
+          periodSeconds: 20
+        resources:
+          requests:
+            cpu: 250m
+            memory: 512Mi
+          limits:
+            cpu: "1"
+            memory: 1Gi
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: ai-music-composer-service
+  labels:
+    app: ai-music-composer
+spec:
+  selector:
+    app: ai-music-composer
+  ports:
+    - name: http
+      protocol: TCP
+      port: 80
+      targetPort: http
+  type: LoadBalancer

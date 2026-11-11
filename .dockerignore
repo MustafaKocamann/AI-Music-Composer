@@ -1,0 +1,12 @@
+.venv
+venv
+env
+__pycache__
+*.py[cod]
+.git
+.gitignore
+.env
+.env.*
+!.env.example
+README.md
+uv.lock
